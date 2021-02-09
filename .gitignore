@@ -44,7 +44,5 @@ docs/
 # translation temp files
 po/*~
 
-.Rproj.user
-.Rhistory
-.RData
-.Ruserdata
+#Mac DS Store
+.DS_Store
