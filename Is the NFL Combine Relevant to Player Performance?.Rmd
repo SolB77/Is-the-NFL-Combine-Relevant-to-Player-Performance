@@ -1,0 +1,386 @@
+---
+title: "Is the NFL Combine Relevant to Player Performance?"
+author: "Sol Ben-Ishay"
+date: "6/7/2020"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Introduction
+
+Being not only a football player, but also a huge fan of the NFL, I always wondered how relevant the NFL Combine is to future player performance. The NFL Combine is an event at the end of the college football season every year in which top college players are invited to participate in a variety of drills measuring speed, strength, and agility in front of NFL coaches and scouts. Regarded as an event that is a good measure of players' future performance; how fast somebody runs or jumps in the Combine can make or break how early they are picked in the draft and hence how much they are paid. Although it is obvious that these combine drills do have an effect on performance given that football is a sport that requires athleticism; my question is how much of an effect does each drill have on each positions future performance?
+
+Football is a game where each position requires a very specific skillset so while the 40 yard dash may be very important in predicting a Wide Recievers success, whose position emphasizes speed, it might not be as important for a Defensive Lineman whose position emphasizes power. General managers and team owners spend millions drafting players based on these metrics and it seems as if they are wrong on choosing players off of them almost the same amount of time that they are right. There are many possible reasons for this, but I believe the main one is overemphasis on drills that are irrelevant to future performance. Millions of dollars and many talented players are wasted because of this emphasis on drills that are not necessarilly always predictive of on the field performance. 
+
+By analyzing the relationship between player combine performance and their future league performance by position, I will be able to create a model for each position that can help team decision-makers better decide what to look at when deciding how to draft players. This will enable NFL general managers, owners, coaches, and those betting on player's success to better decide how much emphasis they should be put on each players' combine performance and what metrics matter the most, if any at all.
+
+## Data
+
+I was able to find all the data I needed on Profootballfocus.com where there is a massive database of player statistics as well as combine data. The data I used was NFL statistic data from 2015-2019 and NFL combine data from 2015-2017. This means my analysis only includes players who were drafted between 2015-2017. Using five years of NFL statistic data allowed me to control for tough rookie seasons, injuries, and players getting used to the league in order to give me a stronger read on their "true" ranking and performance. Using three years of combine data allowed me to draw a larger sample of players and hence better fit my model to any year. After merging, I ended up with 941 players worth of data.
+
+In the NFL statistics dataset, the important metrics are player, position, and player ranking, which was calculated by profootballfocus.com. This ranking measurement was calculated based on position specific metrics such as tackles for a defensive player or rushing yards for a runningback. Based on the important metrics for each position, Profootballfocus gave each player an overall performance rank for each year of data. The issue with this was that the rank was not based on position so whoever was deemed the best "overall" player would have rank 1 for that season. In order to fix this, I first split up the data by position. After splitting the data by position and sorting by year, I "reranked" each player. For example, if the highest rated cornerback in 2015 had an overall rank of "58" their new rank would be "1" based on them having the highest overall rank for their position in the given season. After doing this I created one row of performance data for each player by calculating the median of each players rank over the 5 years of data I had. So for example, if Tom Brady was ranked "6" in 2015, "1" in 2016, "3" in 2017, "2" in 2018, and "1" in 2019 for his position, the new single row would be a median rank of "2". If for example a player only entered the league in 2016, their median ranking would be based on only their four years of data.
+
+In the NFL combine dataset, the important metrics are: player, position, height, weight, 40 yard dash, verical jump, bench press, three-cone drill, and shuttle. The metrics are the outcomes of each drill in the combine that are used to predict future player performance.
+
+Preliminary manipulations and transformations necessary included: cleaning player names, removing extra variables and players, changing height to inches, renaming and sorting player positions, and merging combine data with player performance data.
+
+Load Libraries/Data
+```{r message=FALSE, warning=FALSE}
+library(tidyverse)
+library(stargazer)
+Combine <- read_csv("/Users/solbenishay/Desktop/School/Business Analytics/NFL Combine to Performance Project/Data/Complete Datasets/combine2015_2017.csv")
+CBs <- read_csv("/Users/solbenishay/Desktop/School/Business Analytics/NFL Combine to Performance Project/Data/Complete Datasets/CBs.csv")
+DEs <- read_csv("/Users/solbenishay/Desktop/School/Business Analytics/NFL Combine to Performance Project/Data/Complete Datasets/DEs.csv")
+DTs <- read_csv("/Users/solbenishay/Desktop/School/Business Analytics/NFL Combine to Performance Project/Data/Complete Datasets/DTs.csv")
+FBs <- read_csv("/Users/solbenishay/Desktop/School/Business Analytics/NFL Combine to Performance Project/Data/Complete Datasets/FBs.csv")
+LBs <- read_csv("/Users/solbenishay/Desktop/School/Business Analytics/NFL Combine to Performance Project/Data/Complete Datasets/LBs.csv")
+QBs <- read_csv("/Users/solbenishay/Desktop/School/Business Analytics/NFL Combine to Performance Project/Data/Complete Datasets/QBs.csv")
+RBs <- read_csv("/Users/solbenishay/Desktop/School/Business Analytics/NFL Combine to Performance Project/Data/Complete Datasets/RBs.csv")
+Safeties <- read_csv("/Users/solbenishay/Desktop/School/Business Analytics/NFL Combine to Performance Project/Data/Complete Datasets/Safeties.csv")
+TEs <- read_csv("/Users/solbenishay/Desktop/School/Business Analytics/NFL Combine to Performance Project/Data/Complete Datasets/TEs.csv")
+WRs <- read_csv("/Users/solbenishay/Desktop/School/Business Analytics/NFL Combine to Performance Project/Data/Complete Datasets/WRs.csv")
+```
+
+Rerank Each Player by Position Group/Season
+```{r}
+CBs$Rank <- ave(CBs$Rk, CBs$Year, FUN = seq_along)
+CBs <- select(CBs, -Rk)
+DEs$Rank <- ave(DEs$Rk, DEs$Year, FUN = seq_along)
+DEs <- select(DEs, -Rk)
+DTs$Rank <- ave(DTs$Rk, DTs$Year, FUN = seq_along)
+DTs <- select(DTs, -Rk)
+FBs$Rank <- ave(FBs$Rk, FBs$Year, FUN = seq_along)
+FBs <- select(FBs, -Rk)
+LBs$Rank <- ave(LBs$Rk, LBs$Year, FUN = seq_along)
+LBs <- select(LBs, -Rk)
+QBs$Rank <- ave(QBs$Rk, QBs$Year, FUN = seq_along)
+QBs <- select(QBs, -Rk)
+RBs$Rank <- ave(RBs$Rk, RBs$Year, FUN = seq_along)
+RBs <- select(RBs, -Rk)
+Safeties$Rank <- ave(Safeties$Rk, Safeties$Year, FUN = seq_along)
+Safeties <- select(Safeties, -Rk)
+TEs$Rank <- ave(TEs$Rk, TEs$Year, FUN = seq_along)
+TEs <- select(TEs, -Rk)
+WRs$Rank <- ave(WRs$Rk, WRs$Year, FUN = seq_along)
+WRs <- select(WRs, -Rk)
+```
+
+Create Average/Median Ranking for Each Position Group
+```{r}
+CBs <- CBs %>% group_by(Player) %>% mutate(avg_rank = mean(Rank), median_rank = median(Rank))
+DEs <- DEs %>% group_by(Player) %>% mutate(avg_rank = mean(Rank), median_rank = median(Rank))
+DTs <- DTs %>% group_by(Player) %>% mutate(avg_rank = mean(Rank), median_rank = median(Rank))
+FBs <- FBs %>% group_by(Player) %>% mutate(avg_rank = mean(Rank), median_rank = median(Rank))
+LBs <- LBs %>% group_by(Player) %>% mutate(avg_rank = mean(Rank), median_rank = median(Rank))
+QBs <- QBs %>% group_by(Player) %>% mutate(avg_rank = mean(Rank), median_rank = median(Rank))
+RBs <- RBs %>% group_by(Player) %>% mutate(avg_rank = mean(Rank), median_rank = median(Rank))
+Safeties <- Safeties %>% group_by(Player) %>% mutate(avg_rank = mean(Rank), median_rank = median(Rank))
+TEs <- TEs %>% group_by(Player) %>% mutate(avg_rank = mean(Rank), median_rank = median(Rank))
+WRs <- WRs %>% group_by(Player) %>% mutate(avg_rank = mean(Rank), median_rank = median(Rank))
+```
+
+Merge Data
+```{r}
+CBs <- inner_join(Combine, CBs, by= "Player")
+DEs <- inner_join(Combine, DEs, by= "Player")
+DTs <- inner_join(Combine, DTs, by= "Player")
+FBs <- inner_join(Combine, FBs, by= "Player")
+LBs <- inner_join(Combine, LBs, by= "Player")
+QBs <- inner_join(Combine, QBs, by= "Player")
+RBs <- inner_join(Combine, RBs, by= "Player")
+Safeties <- inner_join(Combine, Safeties, by= "Player")
+TEs <- inner_join(Combine, TEs, by= "Player")
+WRs <- inner_join(Combine, WRs, by= "Player")
+```
+
+Knocking Off Unneccessary Variables
+```{r}
+CBs <- CBs[,-c(1,4,5,6,8,20:39)]
+DEs <- DEs[,-c(1,4,5,6,8,20:39)]
+DTs <- DTs[,-c(1,4,5,6,8,20:39)]
+FBs <- FBs[,-c(1,6,8,20:30)]
+LBs <- LBs[,-c(1,4,5,6,8,20:39)]
+QBs <- QBs[,-c(1,6,8,20:46)]
+RBs <- RBs[,-c(1,6,8,20:30)]
+Safeties <- Safeties[,-c(1,4,5,6,8,20:39)]
+TEs <- TEs[,-c(1,6,8,20:34)]
+WRs <- WRs[,-c(1,6,8,20:34)]
+```
+
+Creating One Datapoint for Each Player
+```{r}
+CBs <- CBs %>% distinct(Player, .keep_all = TRUE)
+DEs <- DEs %>% distinct(Player, .keep_all = TRUE)
+DTs <- DTs %>% distinct(Player, .keep_all = TRUE)
+FBs <- FBs %>% distinct(Player, .keep_all = TRUE)
+LBs <- LBs %>% distinct(Player, .keep_all = TRUE)
+QBs <- QBs %>% distinct(Player, .keep_all = TRUE)
+RBs <- RBs %>% distinct(Player, .keep_all = TRUE)
+Safeties <- Safeties %>% distinct(Player, .keep_all = TRUE)
+TEs <- TEs %>% distinct(Player, .keep_all = TRUE)
+WRs <- WRs %>% distinct(Player, .keep_all = TRUE)
+```
+
+Knocking Off Final Extra Variables
+```{r}
+CBs <- CBs[,-c(1,14,15,16)]
+DEs <- DEs[,-c(1,14,15,16)]
+DTs <- DTs[,-c(1,14,15,16)]
+FBs <- FBs[,-c(1,3,4,16,17,18)]
+LBs <- LBs[,-c(1,14,15,16)]
+QBs <- QBs[,-c(1,3,4,16,17,18)]
+RBs <- RBs[,-c(1,3,4,16,17,18)]
+Safeties <- Safeties[,-c(1,14,15,16)]
+TEs <- TEs[,-c(1,3,4,16,17,18)]
+WRs <- WRs[,-c(1,3,4,16,17,18)]
+```
+
+## Statistical Modeling
+
+In order to model what kind of effect each combine drill had on future player performance, I calculated linear regressions for each position predicting median_rank using all the combine measurements and drills.
+
+Below I break down the regression for each position group and comment on how each of the NFL Combines metrics affects each positions future performance. Because the overall prediction ability of these algorithims was very poor with very low r squares and lack of statistical significance throughout, I decided not to include the plots of median_rank vs. predicted median rank in my analysis as I believe they do not add value to what I was trying to accomplish. The real value of this analysis will come from breaking down each combine measurement and drills individual effect on each positions median_rank, rather than from attempting to predict median rank using the linear regression.
+
+Cornerbacks
+```{r}
+CBreg <- lm(median_rank ~ Height+Wt+Forty+Vertical+Bench+ThreeCone+Shuttle, data=CBs)
+summary(CBreg)
+```
+
+In the regression estimation for Cornerbacks, although none of the coefficients are statistically significant, we are given some insight into what combine drills may help coaches predict how well cornerbacks will perform in the future. Below I break down the sentiment of each of the coefficients, even despite their lack of statistical significance, and explain why I believe the outcome is the way it is:
+
+Height- According to the coefficient on height, a one inch increase in height improves rank by around .75. I believe the reason for this, as with many of the other coefficients is due to all the heights being very similar causing it to have very little impact on future cornerback performance.
+
+Wt- According to the coefficient on Wt, a one pound increase in weight worsens rank by close to 0. I believe this is the case because player weight is not important for cornerbacks just like height.
+
+Forty- According to the coefficient on forty, a one second slower forty time improves player rank by around 137. This coefficient makes no sense whatsoever. This is because cornerback is a position that heavily emphasizes speed. I believe the reason for this estimated relationship is due to all the forty times being very close together because all the players are fast. This gives the algorithm trouble when trying to estimate the true relationship between forty time and ranking. This coefficient could also mean that the fastest corners are not always considered the best, a very possible scenario.
+
+Vertical- According to the coefficient on vertical, a one inch higher vertical jump improves player rank by around 4. This makes a lot of sense considering cornerback is a position that heavily emphasizes jumping ability.
+
+Bench- According to the coefficient on bench press, a one repetition increase in bench improves player rank by around 2. I take this coefficient with a grain of salt because benchpress is a bad predictor of cornerback success for which strength doesn't matter.
+
+ThreeCone- According to the coefficient on threecone, a one second slower time improves player rank by 11. This coefficient makes no sense as cornerback is a position that emphasizes agility and quickness. I believe the reason for this estimated relationship is due to all threecone times being close together. This like the forty times, gives the algorithim trouble when trying to estimate the true relationship between threecone time and ranking. This coefficient could also mean that the quickest corners are not always considered the best, a possible scenario.
+
+Shuttle- According to the coefficient on shuttle, a one second slower shuttle run time worsens player rank by around 60. This makes a lot of sense contrary to the threecone time coefficient. Being a position that needs speed, the shuttle run appears to be a good predictor of future performance compared to the others.
+
+Overall, the coefficients that make the most sense in this regression are those on vertical jump and shuttle. This makes a lot of sense considering cornerback is a position that heavily emphasizes speed and jumping ability.
+
+
+
+
+
+Defensive Ends
+```{r}
+DEreg <- lm(median_rank ~ Height+Wt+Forty+Vertical+Bench+ThreeCone+Shuttle, data=DEs)
+summary(DEreg)
+```
+In the regression estimation for Defensive Ends, although most of the coefficients aren't statistically significant, we are given some insight into what combine measurments matter for predicting future DE performance. Below I break down the sentiment of each of the coefficients, even despite their lack of statistical significance, and explain why I believe the outcome is the way it is:
+
+Height- According to the coefficient on height, a one inch increase in height worsens rank by around 6. I take this coefficient with a grain of salt because all the heights of defensive ends are very similar only varying by 5 inches or so. This coefficient could be saying that very tall defensive ends are not ranked well which might be true. Defensive tackle is a position that requires a combination of height and ability to get low, so very tall people can be disadvantaged.
+
+Wt- According to the coefficient on Wt, a one pound increase in weight improves rank by close to 0. I believe this is the case because all player weights are very similar and hence doesn't have an effect on performance.
+
+Forty- According to the coefficient on forty, a one second slower forty time improves player rank by 8. This doesn't make much sense since all positions in football require speed. I believe the reason for this, as with many of the other coefficients is due to all the forty times being very similar. This gives the algorithm trouble when trying to estimate the true relationship between forty time and ranking. This coefficient could also mean that the fastest defensive ends are not always considered the best, a possible scenario. It is a position that requires a mix of speed and size and it is possible super-fast and undersized DEs don't perform as well.
+
+Vertical- According to the coefficient on vertical, a one inch higher vertical jump improves player rank by around 1. I believe this is likely due to all the vertical jump numbers being very close together, giving it little power in predicting future performance.
+
+Bench- According to the coefficient on bench press, a one repetition increase in bench worsens player rank by close to 0. I believe this is likely due to all the bench numbers being very close together, giving it little power in predicting future performance.
+
+ThreeCone- According to the coefficient on threecone, a one second slower time worsens player rank by around 8. This makes sense since defensive end is a position that emphasizes quickness and bending ability. 
+
+Shuttle- According to the coefficient on shuttle, a one second slower shuttle run time worsens player rank by around 38. This makes sense since defensive end is a position that emphasizes speed and agility.
+
+Overall, the coefficients that make the most sense in this regression are those on shuttle and threecone. This makes a lot of sense considering defensive end is a position that emphasizes speed, quickness, agility, and bending ability for which shuttle and threecone measure.
+
+Defensive Tackles
+```{r}
+DTreg <- lm(median_rank ~ Height+Wt+Forty+Vertical+Bench+ThreeCone+Shuttle, data=DTs)
+summary(DTreg)
+```
+In the regression estimation for Defensive Tackles, although most of the coefficients aren't statistically significant, we are given a decent look into what can predict how well a defensive tackle will perform. Below I break down the sentiment of each of the coefficients, even despite their lack of statistical significance, and explain why I believe the outcome is the way it is:
+
+Height- According to the coefficient on height, a one inch increase in height worsens rank by around 4. I believe the reason for this, as with many of the other coefficients is due to all the heights being very similar. This gives the algorithm trouble when trying to estimate the true relationship between height and ranking. This coefficient could also mean that the tallest defensive tackles are not always considered the best, a possible scenario. Defensive tackle is a position that requires a combination of height and ability to get low, so very tall people can be disadvantaged.
+
+Wt- According to the coefficient on Wt, a one pound increase in weight worsens rank by close to 0. I believe this is the case because all player weights are very similar and hence don't have an effect on performance. 
+
+Forty- According to the coefficient on forty, a one second slower forty time improves player rank by around 23. This doesn't make much sense since all positions in football require speed. I believe the reason for this, as with many of the other coefficients is due to all the forty times being very similar. This gives the algorithm trouble when trying to estimate the true relationship between forty time and ranking. This coefficient could also mean that the fastest defensive tackles are not always considered the best, a possible scenario. It is a position that requires a mix of quickness and size and it is possible super-quick and undersized DTs don't perform as well.
+
+Vertical- According to the coefficient on vertical, a one inch higher vertical jump improves player rank by around 2. This makes sense since defensive tackle is a position that emphasizes power, which vertical is a good measure of.
+
+Bench- According to the coefficient on bench press, a one repetition increase in bench improves player rank by close to 0. I believe this is likely due to all the bench numbers being very close together, giving it little power in predicting future performance.
+
+ThreeCone- According to the coefficient on threecone, a one second slower three cone time worsens player rank by 18. This makes a lot of sense since defensive end is a position that requires quickness and bending ability, for which threecone perfectly measures.
+
+Shuttle- According to the coefficient on shuttle, a one second slower shuttle run time improves player rank by 76. This doesn't make much sense since all positions in football require a fast shuttle. I believe the reason for this, as with many of the other coefficients is due to all the shuttle times being very similar. This gives the algorithm trouble when trying to estimate the true relationship between shuttle time and ranking. This coefficient could also mean that the quickest defensive tackles are not always considered the best, a possible scenario. It is a position that requires a mix of quickness and size and it is possible super-quick and undersized DTs don't perform as well.
+
+Overall, the coefficients that make the most sense in this regression are those on threecone and vertical jump. This makes a lot of sense considering defensive tackle is a position that heavily emphasizes agility and power for which threecone and vertical jump both measure.
+
+Fullbacks
+```{r}
+FBreg <- lm(median_rank ~ Height+Wt+Forty+Vertical+Bench+ThreeCone+Shuttle, data=FBs)
+summary(FBreg)
+```
+In the regression estimation for fullbacks, none of the coefficients are really usable because there were no residual degrees of freedom due to lack of data. This is because fullback is a dying position and there were only 12 players drafted at this position in the three years of combine data I had. 
+
+Linebackers
+```{r}
+LBreg <- lm(median_rank ~ Height+Wt+Forty+Vertical+Bench+ThreeCone+Shuttle, data=LBs)
+summary(LBreg)
+```
+In this regression estimation, although most of the coefficients aren't statistically significant, we are given some insight into what matters the most for linerbackers. Below I break down the sentiment of each of the coefficients, even despite their lack of statistical significance, and explain why I believe the outcome is the way it is:
+
+Height- According to the coefficient on height, a one inch increase in height worsens rank by around 23 at the 1% significance level. I believe the reason for this, as with many of the other coefficients is due to all the heights being very similar. This gives the algorithm trouble when trying to estimate the true relationship between height and ranking. This coefficient could also mean that the tallest linebackers are not always considered the best, a very possible scenario. Linebacker is a position that requires a combination of height and ability to get low, so very tall people can be disadvantaged.
+
+Wt- According to the coefficient on Wt, a one pound increase in weight improves rank by close to 2 at the 5% significance level. This makes sense since linebacker is a position that requires a lot of weight due to the strength and power requirements. They have to be fast while also being heavy.
+
+Forty- According to the coefficient on forty, a one second slower forty time worsens player rank by around 300 at the 0.1% significance level. This makes sense since linebacker is a position that requires speed and in this day and age it is often emphasized over strength. The requirements of the game over the past 20 years have shifted to emphasizing fast linebackers over super strong ones.
+
+Vertical- According to the coefficient on vertical, a one inch higher vertical jump worsens player rank by close to 0. I believe this is the case because all player vertical jumps are relatively similar and hence don't have an effect on performance. 
+
+Bench- According to the coefficient on bench press, a one repetition increase in bench worsens player rank by around 1. I believe this is the case because all players benches are relatively similar and hence don't have an effect on performance. 
+
+ThreeCone- According to the coefficient on threecone, a one second slower time worsens player rank by around 18. This makes a lot of sense since linebacker is a position that requires quickness and bending ability, for which threecone perfectly measures.
+
+Shuttle- According to the coefficient on shuttle, a one second slower shuttle run time worsens player rank by around 42. This makes sense since linebacker is a position that emphasizes speed and agility.
+
+Overall, the coefficients that make the most sense in this regression are those on forty, shuttle, threecone, and weight. This makes a lot of sense considering linebacker is a position that emphasizes a combination of strengh, power, speed, and agility.
+
+Quarterbacks
+```{r}
+QBreg <- lm(median_rank ~ Height+Wt+Forty+Vertical+ThreeCone+Shuttle, data=QBs)
+summary(QBreg)
+```
+In the regression estimation for Quarterbacks, although most of the coefficients aren't statistically significant, we are given some insight into what factors may be able to predict the next Lamar Jackson or Tom Brady (Side note: Brady had one of the worst combine performances ever, but is still regarded as THE greatest of all time). Below I break down the sentiment of each of the coefficients, even despite their lack of statistical significance, and explain why I believe the outcome is the way it is:
+
+Height- According to the coefficient on height, a one inch increase in height worsens rank by around 1. I believe this is the case because all quarterback heights are very similar and hence don't have an effect on performance.
+
+Wt- According to the coefficient on Wt, a one pound increase in weight worsens improves by close to 1. I believe this is the case because all quarterback heights are very similar and hence don't have an effect on performance.
+
+Forty- According to the coefficient on forty, a one second slower forty worsens player rank by around 33. This makes sense because in this day and age, quarterback has become a position that requires speed in order to excel.
+
+Vertical- According to the coefficient on vertical, a one inch higher vertical jump worsens player rank by around 3 at the 5% significance level. I believe the reason for this, as with many of the other coefficients is due to all the verticals being very similar. This gives the algorithm trouble when trying to estimate the true relationship between vertical and ranking. This coefficient could also mean that the most athletic quarterbacks are not always considered the best, a possible scenario.
+
+Bench- Quarterbacks do not bench in the combine so there are no measurements for them.
+
+ThreeCone- According to the coefficient on threecone, a one second slower time worsens player rank by 24. This makes sense because in this day and age, quarterback is a position that requires agility and good footwork in order to excel.
+
+Shuttle- According to the coefficient on shuttle, a one second slower shuttle run time improves player rank by around 5. I believe the reason for this, as with many of the other coefficients is due to all the shuttle run times being very similar. This gives the algorithm trouble when trying to estimate the true relationship between shuttle time and ranking. This coefficient could also mean that the most athletic quarterbacks are not always considered the best, a possible scenario.
+
+Overall, the coefficients that make the most sense in this regression are those on forty and threecone. This makes sense because in this day and age, quarterback has become a position that requires speed and agility in order to excel.
+
+Runningbacks
+```{r}
+RBreg <- lm(median_rank ~ Height+Wt+Forty+Vertical+Bench+ThreeCone+Shuttle, data=RBs)
+summary(RBreg)
+```
+In the regression estimation for Runningbacks, although most of the coefficients aren't statistically significant, we are given a decent look into what measures make the best runningbacks. Below I break down the sentiment of each of the coefficients, even despite their lack of statistical significance, and explain why I believe the outcome is the way it is:
+
+Height- According to the coefficient on height, a one inch increase in height worsens rank by around 3.4. I believe the reason for this, as with many of the other coefficients is due to all the heights being very similar. This gives the algorithm trouble when trying to estimate the true relationship between height and ranking. This coefficient could also mean that the tallest runningbacks are not always considered the best, a very possible scenario. Runningback is a position that requires a combination of height and ability to get low through defenders, so very tall people can be disadvantaged.
+
+Wt- According to the coefficient on Wt, a one pound increase in weight improves rank by around 2.5 at the 0.1% significance level. This makes sense since runningback is a position that requires a lot of weight due to the strength and power requirements. They have to be fast while also being heavy.
+
+Forty- According to the coefficient on forty, a one second slower forty time worsens player rank by around 206 at the 0.1% significance level. This makes sense since runningback is a position that requires a very fast forty speed, hence the term "running" back.
+
+Vertical- According to the coefficient on vertical, a one inch higher vertical jump worsens player rank by around 1.5. I believe the reason for this, as with many of the other coefficients is due to all the verticals being very similar. This gives the algorithm trouble when trying to estimate the true relationship between vertical and ranking. It could also mean that the highest jumping runningbacks are not necessarilly the best.
+
+Bench- According to the coefficient on bench press, a one repetition increase in bench worsens player rank by close to 0. I believe this is the case because all runningbacks benches are very similar and hence don't have an effect on performance.  
+
+ThreeCone- According to the coefficient on threecone, a one second slower time worsens player rank by 72. This makes a lot of sense since runningback is a position that requires quickness and bending ability, for which threecone perfectly measures.
+
+Shuttle- According to the coefficient on shuttle, a one second slower shuttle run time worsens player rank by around 5. This makes a lot of sense since runningback is a position that requires speed and agility.
+
+Overall, the coefficients that make the most sense in this regression are those on forty, threecone, shuttle, and weight. This makes sense because runningback is a position that heavily emphasizes a unique combination of strength, power, quickness, agility, and speed. 
+
+Safeties
+```{r}
+Safetiereg <- lm(median_rank ~ Height+Wt+Forty+Vertical+Bench+ThreeCone+Shuttle, data=Safeties)
+summary(Safetiereg)
+```
+In the regression estimation for Safeties, although none of the coefficients are statistically significant, we are given decent insight into what factors matter for how well safeties perform. Below I break down the sentiment of each of the coefficients, even despite their lack of statistical significance, and explain why I believe the outcome is the way it is:
+
+Height- According to the coefficient on height, a one inch increase in height worsens rank by around 2.4. I believe the reason for this, as with many of the other coefficients is due to all the heights being very similar. This gives the algorithm trouble when trying to estimate the true relationship between height and ranking. This coefficient could also mean that the tallest safeties are not always considered the best, a very possible scenario.
+
+Wt- According to the coefficient on Wt, a one pound increase in weight improves rank by close to 2. This makes sense since safety is a position that requires a good amount of weight due to the strength and power requirements.
+
+Forty- According to the coefficient on forty, a one second slower forty time improves player rank by around 134. This makes sense since safety is a position that requires a fast forty speed.
+
+Vertical- According to the coefficient on vertical, a one inch higher vertical jump improves player rank by around 4. This makes sense since safety is a position that requires a good power and jumping ability which vertical measures.
+
+Bench- According to the coefficient on bench press, a one repetition increase in bench worsens player rank by around 4. I believe the reason for this, as with many of the other coefficients is due to all the verticals being very similar. This gives the algorithm trouble when trying to estimate the true relationship between vertical and ranking. It could also mean that the strongest benching safeties are not necessarilly the best.
+
+ThreeCone- According to the coefficient on threecone, a one second slower time worsens player rank by 47. This makes a lot of sense since safety is a position that requires quickness and bending ability, for which threecone perfectly measures.
+
+Shuttle- According to the coefficient on shuttle, a one second slower shuttle run time worsens player rank by around 40. This makes a lot of sense since safety is a position that requires speed and agility.
+
+Overall, the coefficients that make the most sense in this regression are those on weight, forty, vertical, threecone, and shuttle. This makes sense because safety is a position that heavily emphasizes a blend of strength, power, quickness, agility, and speed. 
+
+Tight Ends
+```{r}
+TEreg <- lm(median_rank ~ Height+Wt+Forty+Vertical+Bench+ThreeCone+Shuttle, data=TEs)
+summary(TEreg)
+```
+In the regression estimation for Tight Ends, although most of the coefficients aren't statistically significant, we are given some insight into what factors may make the next Rob Gronkowski or Travis Kelce. Below I break down the sentiment of each of the coefficients, even despite their lack of statistical significance, and explain why I believe the outcome is the way it is:
+
+Height- According to the coefficient on height, a one inch increase in height improves rank by around 7. This makes a lot of sense because tight end is a position that requires a lot of size and the requirements of the game today constantly emphasize it. They need to be their quarterbacks biggest target and also need length to make blocks.
+
+Wt- According to the coefficient on Wt, a one pound increase in weight worsens rank by close to 1. I believe this is the case because all tight end heights are very similar and hence don't have much an effect on performance.
+
+Forty- According to the coefficient on forty, a one second slower forty time worsens player rank by around 9. This makes sense since tight end is increasingly becoming a position that requires good speed.
+
+Vertical- According to the coefficient on vertical, a one inch higher vertical jump improves player rank by close to 1. I believe this is the case because all tight end heights are very similar and hence don't have much an effect on performance.
+
+Bench- According to the coefficient on bench press, a one repetition increase in bench improves player rank by around 2. This makes sense because tight end is a position that requires good strength in order to make blocks and run through defenders.
+
+ThreeCone- According to the coefficient on threecone, a one second slower time improves player rank by 25. This doesn't make much sense since all positions in football require quickness. I believe the reason for this, as with many of the other coefficients is due to all the threecone times being very similar. This gives the algorithm trouble when trying to estimate the true relationship between three cone time and ranking. This coefficient could also mean that the quickest tight ends are not always considered the best, a possible scenario. It is a position that requires a mix of quickness and size and it is possible super-quick and undersized TEs don't perform as well.
+
+Shuttle- According to the coefficient on shuttle, a one second slower shuttle run time worsens player rank by around 57. This makes a lot of sense because tight end is a position that requires good speed and agility in order to run routes past defenders.
+
+Overall, the coefficients that make the most sense are those on height, forty, bench, and shuttle. This is because tight end is a positon that requires a combination of height, strength, and speed. They are required to run past fast cornerbacks while also being able to power through linebackers. A very unique position.
+
+Wide Recievers
+```{r}
+WRreg <- lm(median_rank ~ Height+Wt+Forty+Vertical+Bench+ThreeCone+Shuttle, data=WRs)
+summary(WRreg)
+```
+In the regression estimation for Wide Recievers, although none of the coefficients are statistically significant, we are given some insight into what factors matter for wide recievers future ranking. Below I break down the sentiment of each of the coefficients, even despite their lack of statistical significance, and explain why I believe the outcome is the way it is:
+
+Height- According to the coefficient on height, a one inch increase in height improves rank by around 4. This makes a lot of sense because tall wide recievers are often some of the best in the league.
+
+Wt- According to the coefficient on Wt, a one pound increase in weight worsens rank by close to 1. I believe this is the case because all wide reciever weights are very similar and hence don't have much an effect on performance.
+
+Forty- According to the coefficient on forty, a one second slower forty time improves player rank by around 35. This does not make much sense, especially for a position such as wide reciever that emphasizes speed. I believe the reason for this, as with many of the other coefficients is due to all the forty times being very similar. This gives the algorithm trouble when trying to estimate the true relationship between forty time and ranking. This coefficient could also mean that the fastest wide recievers are not always considered the best, a very possible scenario.
+
+Vertical- According to the coefficient on vertical, a one inch higher vertical jump improves player rank by around 4. This makes a lot of sense because wide recievers are required to be able to jump high over defenders to catch balls thrown at them.
+
+Bench- According to the coefficient on bench press, a one repetition increase in bench improves player rank by around 2. This makes sense because like all positions, wide recievers need a good amount of strength.
+
+ThreeCone- According to the coefficient on threecone, a one second slower time improves player rank by around 45. This does not much any sense, especially for a position such as wide reciever that emphasizes quickness and agility. I believe the reason for this, as with many of the other coefficients is due to all the threecone times being very similar. This gives the algorithm trouble when trying to estimate the true relationship between three cone time and ranking. This coefficient could also mean that the quickest and most agile wide recievers are not always considered the best, a very possible scenario.
+
+Shuttle- According to the coefficient on shuttle, a one second slower shuttle run time improves player rank by around 18. This does not make much sense, especially for a position such as wide reciever that emphasizes speed and agility. I believe the reason for this, as with many of the other coefficients is due to all the shuttle times being very similar. This gives the algorithm trouble when trying to estimate the true relationship between shuttle time and ranking. This coefficient could also mean that the fastest and most agile wide recievers are not always considered the best, a very possible scenario.
+
+Overall, the coefficients that make the most sense are those on height and vertical jump. This is because wide reciever is a positon that requires a combination of height and jumping ability. They need to have long strides and be able to leap over defenders in order to "recieve" passes from the quarterback, hence their name.
+
+## Conclusion
+
+Based on the overall results of the linear regressions for each position group, the NFL Combines drills and measurements have a very loose relevance in how players perform in the future. Contrary to what is believed every year in the combine when players are often picked over each other for .05 second differences in 40 yard dash time, players individual combine metrics are not very predictive of how players perform in the future. Depending on the position, certain combine drills may have some relevance. Just like a defensive tackle's 40 time doesn't matter greatly because the position emphasizes power, a wide recievers bench press will not matter much to because their position emphasizes speed and quickness. Despite this, these combine measurements are overall the opposite of a perfect predictor of future player performance as can be seen from the output of my regressions and analysis of them. 
+
+This finding has been proven many times before in the NFLs history. Perhaps the most prime example of this was Tom Brady. He was drafted in 2000 as the last quarterback in the draft largely due to his extremely poor combine performance. Despite having a great college career at University of Michigan, he was overlooked by teams because of his terrible combine measurements. Despite being the last pick, he went on to become the best quarterback of all time (I'm a Patriots fan. Have to say it). 
+
+Stories like Brady's combined with the outcomes of the linear models I created help to support the fact that NFL combine performance on its own is not a good predictor of future player performance no matter the position. Although each of the variables may have some effect on future performance for each position, they are not the one stop shop like many scouts love to believe. The outcome of these regressions and my analysis helps to show how many millions of dollars and talented players are wasted every season by NFL general managers, owners, coaches, and scouts who make picks solely based on combine performance. When trying to predict future player performance, it is clear that NFL general managers and other decision-makers must take a holistic approach when picking players and consider things measured outside the combine such as college statistics, immeasurables such as work ethic and intelligence, and the specific needs of your team. Doing so will enable NFL decision-makers to save more money and most importantly pick the best players for their team. Moral of this analysis is if you ever find yourself in the stands at the combine making picks for an NFL team, remember the story of Tom Brady and what the combine meant for his success.
+
+## References
+
+Data Source- “NFL, Fantasy Football, and NFL Draft.” PFF, www.pff.com/.
+
+
+
+
+
+
+
+

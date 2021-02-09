@@ -1,0 +1,208 @@
+---
+title: "R Notebook"
+output:
+  html_document:
+    df_print: paged
+---
+
+Load Libraries/Data
+```{r message=FALSE, warning=FALSE}
+library(tidyverse)
+library(stargazer)
+CombineD2015 <- read.csv("/Users/solbenishay/Desktop/School/Business Analytics/NFL Combine to Performance Project/Data/Combine Data/2015CombineDefense.csv")
+CombineD2016 <- read.csv("/Users/solbenishay/Desktop/School/Business Analytics/NFL Combine to Performance Project/Data/Combine Data/2016CombineDefense.csv")
+CombineD2017 <- read.csv("/Users/solbenishay/Desktop/School/Business Analytics/NFL Combine to Performance Project/Data/Combine Data/2017CombineDefense.csv")
+CombineO2015 <- read.csv("/Users/solbenishay/Desktop/School/Business Analytics/NFL Combine to Performance Project/Data/Combine Data/2015CombineOffense.csv")
+CombineO2016 <- read.csv("/Users/solbenishay/Desktop/School/Business Analytics/NFL Combine to Performance Project/Data/Combine Data/2016CombineOffense.csv")
+CombineO2017 <- read.csv("/Users/solbenishay/Desktop/School/Business Analytics/NFL Combine to Performance Project/Data/Combine Data/2017CombineOffense.csv")
+Defense2015 <- read.csv("/Users/solbenishay/Desktop/School/Business Analytics/NFL Combine to Performance Project/Data/Defensive Data/2015NFLDefense.csv")
+Defense2016 <- read.csv("/Users/solbenishay/Desktop/School/Business Analytics/NFL Combine to Performance Project/Data/Defensive Data/2016NFLDefense.csv")
+Defense2017 <- read.csv("/Users/solbenishay/Desktop/School/Business Analytics/NFL Combine to Performance Project/Data/Defensive Data/2017NFLDefense.csv")
+Defense2018 <- read.csv("/Users/solbenishay/Desktop/School/Business Analytics/NFL Combine to Performance Project/Data/Defensive Data/2018NFLDefense.csv")
+Defense2019 <- read.csv("/Users/solbenishay/Desktop/School/Business Analytics/NFL Combine to Performance Project/Data/Defensive Data/2019NFLDefense.csv")
+Passing2015 <- read.csv("/Users/solbenishay/Desktop/School/Business Analytics/NFL Combine to Performance Project/Data/Passing Data/2015NFLPassing.csv")
+Passing2016 <- read.csv("/Users/solbenishay/Desktop/School/Business Analytics/NFL Combine to Performance Project/Data/Passing Data/2016NFLPassing.csv")
+Passing2017 <- read.csv("/Users/solbenishay/Desktop/School/Business Analytics/NFL Combine to Performance Project/Data/Passing Data/2017NFLPassing.csv")
+Passing2018 <- read.csv("/Users/solbenishay/Desktop/School/Business Analytics/NFL Combine to Performance Project/Data/Passing Data/2018NFLPassing.csv")
+Passing2019 <- read.csv("/Users/solbenishay/Desktop/School/Business Analytics/NFL Combine to Performance Project/Data/Passing Data/2019NFLPassing.csv")
+Rushing2015 <- read.csv("/Users/solbenishay/Desktop/School/Business Analytics/NFL Combine to Performance Project/Data/Rushing Data/2015NFLRushing.csv")
+Rushing2016 <- read.csv("/Users/solbenishay/Desktop/School/Business Analytics/NFL Combine to Performance Project/Data/Rushing Data/2016NFLRushing.csv")
+Rushing2017 <- read.csv("/Users/solbenishay/Desktop/School/Business Analytics/NFL Combine to Performance Project/Data/Rushing Data/2017NFLRushing.csv")
+Rushing2018 <- read.csv("/Users/solbenishay/Desktop/School/Business Analytics/NFL Combine to Performance Project/Data/Rushing Data/2018NFLRushing.csv")
+Rushing2019 <- read.csv("/Users/solbenishay/Desktop/School/Business Analytics/NFL Combine to Performance Project/Data/Rushing Data/2019NFLRushing.csv")
+Recieving2015 <- read.csv("/Users/solbenishay/Desktop/School/Business Analytics/NFL Combine to Performance Project/Data/Recieving Data/2015NFLRecieving.csv")
+Recieving2016 <- read.csv("/Users/solbenishay/Desktop/School/Business Analytics/NFL Combine to Performance Project/Data/Recieving Data/2016NFLRecieving.csv")
+Recieving2017 <- read.csv("/Users/solbenishay/Desktop/School/Business Analytics/NFL Combine to Performance Project/Data/Recieving Data/2017NFLRecieving.csv")
+Recieving2018 <- read.csv("/Users/solbenishay/Desktop/School/Business Analytics/NFL Combine to Performance Project/Data/Recieving Data/2018NFLRecieving.csv")
+Recieving2019 <- read.csv("/Users/solbenishay/Desktop/School/Business Analytics/NFL Combine to Performance Project/Data/Recieving Data/2019NFLRecieving.csv")
+```
+
+Adding Year to Player Statistics
+
+Defense
+```{r}
+Defense2015 <- Defense2015 %>% mutate(Year = "2015")
+Defense2016 <- Defense2016 %>% mutate(Year = "2016")
+Defense2017 <- Defense2017 %>% mutate(Year = "2017")
+Defense2018 <- Defense2018 %>% mutate(Year = "2018")
+Defense2019 <- Defense2019 %>% mutate(Year = "2019")
+```
+Passing
+```{r}
+Passing2015 <- Passing2015 %>% mutate(Year = "2015")
+Passing2016 <- Passing2016 %>% mutate(Year = "2016")
+Passing2017 <- Passing2017 %>% mutate(Year = "2017")
+Passing2018 <- Passing2018 %>% mutate(Year = "2018")
+Passing2019 <- Passing2019 %>% mutate(Year = "2019")
+```
+Recieving
+```{r}
+Recieving2015 <- Recieving2015 %>% mutate(Year = "2015")
+Recieving2016 <- Recieving2016 %>% mutate(Year = "2016")
+Recieving2017 <- Recieving2017 %>% mutate(Year = "2017")
+Recieving2018 <- Recieving2018 %>% mutate(Year = "2018")
+Recieving2019 <- Recieving2019 %>% mutate(Year = "2019")
+```
+Rushing
+```{r}
+Rushing2015 <- Rushing2015 %>% mutate(Year = "2015")
+Rushing2016 <- Rushing2016 %>% mutate(Year = "2016")
+Rushing2017 <- Rushing2017 %>% mutate(Year = "2017")
+Rushing2018 <- Rushing2018 %>% mutate(Year = "2018")
+Rushing2019 <- Rushing2019 %>% mutate(Year = "2019")
+```
+
+Bind Rows
+```{r message=FALSE, warning=FALSE}
+defense2015_2019 <- bind_rows(Defense2015, Defense2016, Defense2017, Defense2018, Defense2019)
+defense2015_2019 <- defense2015_2019[1:25]
+passing2015_2019 <- bind_rows(Passing2015, Passing2016, Passing2017, Passing2018, Passing2019)
+rushing2015_2019 <- bind_rows(Rushing2015, Rushing2016, Rushing2017, Rushing2018, Rushing2019)
+recieving2015_2019 <- bind_rows(Recieving2015, Recieving2016, Recieving2017, Recieving2018, Recieving2019)
+combine2015_2017 <- bind_rows(CombineD2015, CombineO2015, CombineD2016, CombineO2016, CombineD2017, CombineO2017)
+```
+
+Clean Data
+
+Rename Columns/Fill Blanks
+```{r}
+combine2015_2017 <- combine2015_2017 %>% rename("Forty" = "X40YD") %>% rename("ThreeCone" = "X3Cone") %>% rename("Bench" = "BenchReps") %>% rename("Broad Jump" = "Broad.Jump") %>% rename("Drafted" = "Drafted..tm.rnd.yr.") 
+combine2015_2017$Drafted[combine2015_2017$Drafted == ""] <- "Undrafted"
+passing2015_2019$QBrec[passing2015_2019$QBrec == ""] <- "DNS"
+```
+
+
+Replace Strings (Player Names)
+```{r}
+combine2015_2017$Player <- sub('\\\\.*', "", combine2015_2017$Player)
+defense2015_2019$Player <- sub('[*].*', "", defense2015_2019$Player)
+defense2015_2019$Player <- sub('\\\\.*', "", defense2015_2019$Player)
+passing2015_2019$Player <- sub('[*].*',"", passing2015_2019$Player)
+recieving2015_2019$Player <- sub('[*].*',"", recieving2015_2019$Player)
+rushing2015_2019$Player <- sub('[*].*',"", rushing2015_2019$Player)
+passing2015_2019$QBrec <- gsub('/', "-", passing2015_2019$QBrec)
+```
+
+Clean Up Heights (Being read as dates)
+```{r message=FALSE}
+combine2015_2017$Height <- sub('/20.*', "", combine2015_2017$Height)
+combine2015_2017$Height <- sub('/00.*', "", combine2015_2017$Height)
+sub('/', "-", combine2015_2017$Height)
+combine2015_2017 <- separate(combine2015_2017, col = Height, into = c("Feet", "Inches"), sep = "/" )
+combine2015_2017$Feet <- as.integer(combine2015_2017$Feet)
+combine2015_2017$Inches <- as.integer(combine2015_2017$Inches)
+combine2015_2017 <- combine2015_2017 %>% mutate(Height = (combine2015_2017$Feet*12)+(combine2015_2017$Inches)) %>% select(-Feet, -Inches)
+combine2015_2017 <- combine2015_2017[c(1,2,3,4,5,6,7,8,17,9,10,11,12,13,14,15,16)]
+```
+
+Remove Extra Players and Rename Postions
+
+Passing
+```{r}
+passing2015_2019 <- filter(passing2015_2019, passing2015_2019$Pos == "QB"|passing2015_2019$Pos == "QB/qb"|passing2015_2019$Pos == "QB/WR"|passing2015_2019$Pos == "/QB/TE/WR"|passing2015_2019$Pos == "")
+passing2015_2019 <- passing2015_2019[-c(308, 309, 60), ]
+passing2015_2019$Pos <- "QB"
+```
+Defense
+```{r}
+defense2015_2019$Pos <- gsub(".*CB.*", "CB", defense2015_2019$Pos)
+defense2015_2019$Pos <- gsub(".*DE.*", "DE", defense2015_2019$Pos)
+defense2015_2019$Pos <- gsub(".*ILB.*", "LB", defense2015_2019$Pos)
+defense2015_2019$Pos <- gsub(".*MLB.*", "LB", defense2015_2019$Pos)
+defense2015_2019$Pos <- gsub(".*SS.*", "S", defense2015_2019$Pos)
+defense2015_2019$Pos <- gsub(".*LLB.*", "LB", defense2015_2019$Pos)
+defense2015_2019$Pos <- gsub(".*RLB.*", "LB", defense2015_2019$Pos)
+defense2015_2019$Pos <- gsub(".*rilb.*", "LB", defense2015_2019$Pos)
+defense2015_2019$Pos <- gsub(".*lilb.*", "LB", defense2015_2019$Pos)
+defense2015_2019$Pos <- gsub(".*LOLB.*", "LB", defense2015_2019$Pos)
+defense2015_2019$Pos <- gsub(".*ROLB.*", "LB", defense2015_2019$Pos)
+defense2015_2019$Pos <- gsub(".*FS.*", "S", defense2015_2019$Pos)
+defense2015_2019$Pos <- gsub(".*fs.*", "S", defense2015_2019$Pos)
+defense2015_2019$Pos <- gsub(".*S.*", "S", defense2015_2019$Pos)
+defense2015_2019$Pos <- gsub(".*s.*", "S", defense2015_2019$Pos)
+defense2015_2019$Pos <- gsub(".*DT.*", "DT", defense2015_2019$Pos)
+defense2015_2019$Pos <- gsub(".*LB.*", "LB", defense2015_2019$Pos)
+defense2015_2019$Pos <- gsub(".*NT.*", "DT", defense2015_2019$Pos)
+defense2015_2019 <- filter(defense2015_2019, defense2015_2019$Pos == "CB"|defense2015_2019$Pos =="DE"|defense2015_2019$Pos =="DT"|defense2015_2019$Pos =="S"|defense2015_2019$Pos =="LB")
+```
+
+Recieving
+```{r}
+recieving2015_2019$Pos <- gsub(".*TE.*", "TE", recieving2015_2019$Pos)
+recieving2015_2019$Pos <- gsub(".*RB.*", "RB", recieving2015_2019$Pos)
+recieving2015_2019$Pos <- gsub(".*WR.*", "WR", recieving2015_2019$Pos)
+recieving2015_2019$Pos <- gsub(".*TE.*", "TE", recieving2015_2019$Pos)
+recieving2015_2019$Pos <- gsub(".*FB.*", "FB", recieving2015_2019$Pos)
+recieving2015_2019 <- filter(recieving2015_2019, recieving2015_2019$Pos == "TE"|recieving2015_2019$Pos =="RB"|recieving2015_2019$Pos =="WR"|recieving2015_2019$Pos =="FB")
+```
+
+Rushing
+```{r}
+rushing2015_2019$Pos <- gsub(".*FB.*", "FB", rushing2015_2019$Pos)
+rushing2015_2019$Pos <- gsub(".*fb.*", "FB", rushing2015_2019$Pos)
+rushing2015_2019$Pos <- gsub(".*Fb.*", "FB", rushing2015_2019$Pos)
+rushing2015_2019$Pos <- gsub(".*RB.*", "RB", rushing2015_2019$Pos)
+rushing2015_2019$Pos <- gsub(".*rb.*", "RB", rushing2015_2019$Pos)
+rushing2015_2019$Pos <- gsub(".*Rb.*", "RB", rushing2015_2019$Pos)
+rushing2015_2019 <- filter(rushing2015_2019, rushing2015_2019$Pos == "FB"|rushing2015_2019$Pos =="RB")
+```
+
+Create Dataframes by Position
+```{r}
+LBs <- filter(defense2015_2019, Pos=="LB")
+DEs <- filter(defense2015_2019, Pos=="DE")
+DTs <- filter(defense2015_2019, Pos=="DT")
+Safeties <- filter(defense2015_2019, Pos=="S")
+CBs <- filter(defense2015_2019, Pos=="CB")
+RBs <- filter(rushing2015_2019, Pos=="RB")
+RB2 <- filter(recieving2015_2019, Pos=="RB")
+FBs <- filter(rushing2015_2019, Pos=="FB")
+FB2 <- filter(recieving2015_2019, Pos=="FB")
+WRs <- filter(recieving2015_2019, Pos=="WR")
+TEs <- filter(recieving2015_2019, Pos=="TE")
+QBs <- filter(passing2015_2019, Pos=="QB")
+```
+
+Write CSV's
+```{r}
+write_csv(defense2015_2019 , "/Users/solbenishay/Desktop/School/Business Analytics/NFL Combine to Performance Project/Data/Complete Datasets/defense2015_2019.csv")
+write_csv(passing2015_2019 , "/Users/solbenishay/Desktop/School/Business Analytics/NFL Combine to Performance Project/Data/Complete Datasets/passing2015_2019.csv")
+write_csv(rushing2015_2019 , "/Users/solbenishay/Desktop/School/Business Analytics/NFL Combine to Performance Project/Data/Complete Datasets/rushing2015_2019.csv")
+write_csv(recieving2015_2019 , "/Users/solbenishay/Desktop/School/Business Analytics/NFL Combine to Performance Project/Data/Complete Datasets/recieving2015_2019.csv")
+write_csv(combine2015_2017 , "/Users/solbenishay/Desktop/School/Business Analytics/NFL Combine to Performance Project/Data/Complete Datasets/combine2015_2017.csv")
+write_csv(LBs , "/Users/solbenishay/Desktop/School/Business Analytics/NFL Combine to Performance Project/Data/Complete Datasets/LBs.csv")
+write_csv(DEs , "/Users/solbenishay/Desktop/School/Business Analytics/NFL Combine to Performance Project/Data/Complete Datasets/DEs.csv")
+write_csv(DTs , "/Users/solbenishay/Desktop/School/Business Analytics/NFL Combine to Performance Project/Data/Complete Datasets/DTs.csv")
+write_csv(Safeties , "/Users/solbenishay/Desktop/School/Business Analytics/NFL Combine to Performance Project/Data/Complete Datasets/Safeties.csv")
+write_csv(CBs , "/Users/solbenishay/Desktop/School/Business Analytics/NFL Combine to Performance Project/Data/Complete Datasets/CBs.csv")
+write_csv(RBs , "/Users/solbenishay/Desktop/School/Business Analytics/NFL Combine to Performance Project/Data/Complete Datasets/RBs.csv")
+write_csv(RB2  , "/Users/solbenishay/Desktop/School/Business Analytics/NFL Combine to Performance Project/Data/Complete Datasets/RB2 .csv")
+write_csv(FBs , "/Users/solbenishay/Desktop/School/Business Analytics/NFL Combine to Performance Project/Data/Complete Datasets/FBs.csv")
+write_csv(FB2 , "/Users/solbenishay/Desktop/School/Business Analytics/NFL Combine to Performance Project/Data/Complete Datasets/FB2.csv")
+write_csv(WRs , "/Users/solbenishay/Desktop/School/Business Analytics/NFL Combine to Performance Project/Data/Complete Datasets/WRs.csv")
+write_csv(TEs , "/Users/solbenishay/Desktop/School/Business Analytics/NFL Combine to Performance Project/Data/Complete Datasets/TEs.csv")
+write_csv(QBs , "/Users/solbenishay/Desktop/School/Business Analytics/NFL Combine to Performance Project/Data/Complete Datasets/QBs.csv")
+```
+
+
+
