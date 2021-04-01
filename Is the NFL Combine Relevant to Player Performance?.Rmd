@@ -170,10 +170,6 @@ Shuttle- According to the coefficient on shuttle, a one second slower shuttle ru
 
 Overall, the coefficients that make the most sense in this regression are those on vertical jump and shuttle. This makes a lot of sense considering cornerback is a position that heavily emphasizes speed and jumping ability.
 
-
-
-
-
 Defensive Ends
 ```{r}
 DEreg <- lm(median_rank ~ Height+Wt+Forty+Vertical+Bench+ThreeCone+Shuttle, data=DEs)
